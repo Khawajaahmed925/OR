@@ -96,10 +96,8 @@ function initializeNavigation() {
       
       // Load section-specific data
       if (sectionId === 'leads') {
-        console.log('🎯 Switching to leads section, loading data...');
         loadLeadsData();
       } else if (sectionId === 'dashboard') {
-        console.log('🎯 Switching to dashboard section, loading metrics...');
         loadDashboardMetrics();
       }
     });
@@ -544,28 +542,6 @@ async function pollForCompletion(threadId, runId, maxAttempts = 60) {
       
       if (data.status === 'completed') {
         addMessage(data.message, 'assistant');
-        
-        // Check if leads were processed and refresh leads page if needed
-        if (data.lead_processing && data.lead_processing.detected && data.lead_processing.processed) {
-          console.log(`🎯 Leads detected and processed: ${data.lead_processing.count} leads`);
-          
-          // Show notification about lead processing
-          showNotification(
-            `${employees[currentEmployee]?.name} found and processed ${data.lead_processing.count} new leads!`,
-            'success'
-          );
-          
-          // Auto-refresh leads page if user is currently viewing it
-          const leadsSection = document.getElementById('leads-section');
-          if (leadsSection && leadsSection.classList.contains('active')) {
-            console.log('📊 Auto-refreshing leads page...');
-            await loadLeadsData();
-          }
-          
-          // Update dashboard metrics
-          await loadDashboardMetrics();
-        }
-        
         console.log(`✅ Task completed for ${employees[currentEmployee]?.name}`);
         return;
       } else if (data.status === 'failed') {
@@ -805,26 +781,9 @@ function saveColorScheme() {
 function showNotification(message, type = 'info') {
   const notification = document.createElement('div');
   notification.className = `notification notification-${type}`;
-  
-  // Add appropriate icon based on type
-  let icon = '';
-  switch (type) {
-    case 'success':
-      icon = '✅';
-      break;
-    case 'error':
-      icon = '❌';
-      break;
-    case 'warning':
-      icon = '⚠️';
-      break;
-    default:
-      icon = 'ℹ️';
-  }
-  
   notification.innerHTML = `
     <div class="notification-content">
-      <span>${icon} ${message}</span>
+      <span>${message}</span>
       <button class="notification-close" onclick="this.parentElement.parentElement.remove()">&times;</button>
     </div>
   `;
@@ -837,13 +796,10 @@ function showNotification(message, type = 'info') {
       notification.remove();
     }
   }, 5000);
-  
-  console.log(`📢 Notification shown: ${type} - ${message}`);
 }
 
 async function loadDashboardMetrics() {
   try {
-    console.log('📈 Loading dashboard metrics...');
     const response = await fetch('/api/leads/statistics');
     const stats = await response.json();
     
@@ -858,10 +814,6 @@ async function loadDashboardMetrics() {
       if (leadsValidated) leadsValidated.textContent = stats.validated || 0;
       if (leadsContacted) leadsContacted.textContent = stats.outreach_sent || 0;
       if (leadsConverted) leadsConverted.textContent = stats.converted || 0;
-      
-      console.log(`✅ Updated dashboard metrics: ${stats.total || 0} total leads`);
-    } else {
-      console.error('Failed to load dashboard metrics:', stats);
     }
   } catch (error) {
     console.error('Failed to load dashboard metrics:', error);
@@ -870,21 +822,15 @@ async function loadDashboardMetrics() {
 
 async function loadLeadsData() {
   try {
-    console.log('📊 Loading leads data...');
     const response = await fetch('/api/leads?limit=100');
     const data = await response.json();
     
     if (response.ok) {
       displayLeadsTable(data.leads || []);
       updateLeadsPagination(data);
-      console.log(`✅ Loaded ${data.leads?.length || 0} leads`);
-    } else {
-      console.error('Failed to load leads:', data);
-      showNotification('Failed to load leads data', 'error');
     }
   } catch (error) {
     console.error('Failed to load leads data:', error);
-    showNotification('Error loading leads data', 'error');
   }
 }
 
@@ -898,14 +844,12 @@ function displayLeadsTable(leads) {
     tableBody.innerHTML = `
       <tr>
         <td colspan="6" style="text-align: center; padding: 40px; color: #64748b;">
-          No leads found yet. Ask ${employees[currentEmployee]?.name || 'AI Brenden'} to generate some leads for you!
+          No leads found. Ask AI Brenden to generate some leads for you!
         </td>
       </tr>
     `;
     return;
   }
-  
-  console.log(`📋 Displaying ${leads.length} leads in table`);
   
   leads.forEach(lead => {
     const row = document.createElement('tr');
