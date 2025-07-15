@@ -555,7 +555,7 @@ async function pollForCompletion(threadId, runId, maxAttempts = 60) {
       }
       
       // Continue polling
-      setTimeout(poll, 2000);
+      setTimeout(poll, 5000);
       
     } catch (error) {
       console.error('Polling error:', error);
@@ -564,7 +564,7 @@ async function pollForCompletion(threadId, runId, maxAttempts = 60) {
   };
   
   // Start polling after a short delay
-  setTimeout(poll, 2000);
+  setTimeout(poll, 5000);
 }
 
 function addMessage(content, role, isError = false) {
